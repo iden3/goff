@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/consensys/bavard"
-	"github.com/consensys/goff/internal/templates/element"
+	"github.com/iden3/goff/internal/templates/element"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +39,7 @@ var (
 	fOutputDir   string
 	fPackageName string
 	fElementName string
+	fIfaceName   string
 	fBenches     bool
 )
 
@@ -48,6 +49,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fModulus, "modulus", "m", "", "field modulus (base 10)")
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
+	rootCmd.PersistentFlags().StringVarP(&fIfaceName, "interface", "i", "", "interface name in generated files")
 	rootCmd.PersistentFlags().BoolVarP(&fBenches, "benches", "b", false, "set to true to generate montgomery multiplication (CIOS, FIPS, noCarry) benchmarks")
 
 	if bits.UintSize != 64 {
@@ -68,15 +70,15 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, false); err != nil {
+	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, fIfaceName, false); err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
 	}
 }
 
-func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, noCollidingNames bool) error {
+func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, ifaceName string, noCollidingNames bool) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, benches, noCollidingNames)
+	F, err := newField(packageName, elementName, modulus, benches, ifaceName, noCollidingNames)
 	if err != nil {
 		return err
 	}

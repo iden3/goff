@@ -32,8 +32,17 @@ const {{.ElementName}}Limbs = {{.NbWords}}
 // {{.ElementName}}Bits number bits needed to represent {{.ElementName}}
 const {{.ElementName}}Bits = {{.NbBits}}
 
+// GetUint64 returns z[0],... z[N-1]
+func (z {{.ElementName}}) GetUint64() []uint64  {
+    return z[0:]
+}
+
 // SetUint64 z = v, sets z LSB to v (non-Montgomery form) and convert z to Montgomery form
-func (z *{{.ElementName}}) SetUint64(v uint64) *{{.ElementName}} {
+{{- if eq .IfaceName .ElementName}} 
+func (z *{{.ElementName}}) SetUint64(v uint64) *{{.IfaceName}} {
+{{else}}
+func (z *{{.ElementName}}) SetUint64(v uint64) {{.IfaceName}} {
+{{end}}
 	z[0] = v
 	{{- range $i := .NbWordsIndexesNoZero}}
 		z[{{$i}}] = 0
@@ -42,15 +51,24 @@ func (z *{{.ElementName}}) SetUint64(v uint64) *{{.ElementName}} {
 }
 
 // Set z = x
-func (z *{{.ElementName}}) Set(x *{{.ElementName}}) *{{.ElementName}} {
+{{- if eq .IfaceName .ElementName}} 
+func (z *{{.ElementName}}) Set(x *{{.IfaceName}}) *{{.IfaceName}} {
+{{else}}
+func (z *{{.ElementName}}) Set(x {{.IfaceName}}) {{.IfaceName}} {
+{{end}}
+        var xar = x.GetUint64()
 	{{- range $i := .NbWordsIndexesFull}}
-		z[{{$i}}] = x[{{$i}}]
+		z[{{$i}}] = xar[{{$i}}]
 	{{- end}}
 	return z
 }
 
 // SetZero z = 0
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) SetZero() *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) SetZero() {{.IfaceName}} {
+{{end}}
 	{{- range $i := .NbWordsIndexesFull}}
 		z[{{$i}}] = 0
 	{{- end}}
@@ -58,7 +76,11 @@ func (z *{{.ElementName}}) SetZero() *{{.ElementName}} {
 }
 
 // SetOne z = 1 (in Montgomery form)
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) SetOne() *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) SetOne() {{.IfaceName}} {
+{{end}}
 	{{- range $i := .NbWordsIndexesFull}}
 		z[{{$i}}] = {{index $.One $i}}
 	{{- end}}
@@ -67,17 +89,22 @@ func (z *{{.ElementName}}) SetOne() *{{.ElementName}} {
 
 
 // Neg z = q - x 
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) Neg( x {{.IfaceName}}) {{.IfaceName}} {
+{{end}}
 	if x.IsZero() {
 		return z.SetZero()
 	}
 	var borrow uint64
-	z[0], borrow = bits.Sub64({{index $.Q 0}}, x[0], 0)
+        var xar = x.GetUint64()
+	z[0], borrow = bits.Sub64({{index $.Q 0}}, xar[0], 0)
 	{{- range $i := .NbWordsIndexesNoZero}}
 		{{- if eq $i $.NbWordsLastIndex}}
-			z[{{$i}}], _ = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
+			z[{{$i}}], _ = bits.Sub64({{index $.Q $i}}, xar[{{$i}}], borrow)
 		{{- else}}
-			z[{{$i}}], borrow = bits.Sub64({{index $.Q $i}}, x[{{$i}}], borrow)
+			z[{{$i}}], borrow = bits.Sub64({{index $.Q $i}}, xar[{{$i}}], borrow)
 		{{- end}}
 	{{- end}}
 	return z
@@ -85,7 +112,11 @@ func (z *{{.ElementName}}) Neg( x *{{.ElementName}}) *{{.ElementName}} {
 
 
 // Div z = x*y^-1 mod q 
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) Div( x, y *{{.ElementName}}) *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) Div( x, y {{.IfaceName}}) {{.IfaceName}} {
+{{end}}
 	var yInv {{.ElementName}}
 	yInv.Inverse( y)
 	z.Mul( x, &yInv)
@@ -93,8 +124,13 @@ func (z *{{.ElementName}}) Div( x, y *{{.ElementName}}) *{{.ElementName}} {
 }
 
 // Equal returns z == x
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) Equal(x *{{.ElementName}}) bool {
-	return {{- range $i :=  reverse .NbWordsIndexesNoZero}}(z[{{$i}}] == x[{{$i}}]) &&{{end}}(z[0] == x[0])
+{{else}}
+func (z *{{.ElementName}}) Equal(x {{.IfaceName}}) bool {
+{{end}}
+        var xar = x.GetUint64()
+	return {{- range $i :=  reverse .NbWordsIndexesNoZero}}(z[{{$i}}] == xar[{{$i}}]) &&{{end}}(z[0] == xar[0])
 }
 
 // IsZero returns z == 0
@@ -120,7 +156,11 @@ func {{.ElementName}}Modulus() *big.Int {
 
 // Inverse z = x^-1 mod q 
 // note: allocates a big.Int (math/big)
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) Inverse( x *{{.ElementName}}) *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) Inverse( x {{.IfaceName}}) {{.IfaceName}} {
+{{end}}
 	var _xNonMont big.Int
 	x.ToBigIntRegular( &_xNonMont)
 	_xNonMont.ModInverse(&_xNonMont, {{.ElementName}}Modulus())
@@ -133,7 +173,11 @@ func (z *{{.ElementName}}) Inverse( x *{{.ElementName}}) *{{.ElementName}} {
 // Inverse z = x^-1 mod q 
 // Algorithm 16 in "Efficient Software-Implementation of Finite Fields with Applications to Cryptography"
 // if x == 0, sets and returns z = x 
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) Inverse(x *{{.ElementName}}) *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) Inverse(x {{.IfaceName}}) {{.IfaceName}} {
+{{end}}
 	if x.IsZero() {
 		return z.Set(x)
 	}
@@ -153,7 +197,7 @@ func (z *{{.ElementName}}) Inverse(x *{{.ElementName}}) *{{.ElementName}} {
 	// r = 0
 	r := {{.ElementName}}{}
 
-	v := *x
+	v := x.GetUint64()
 
 	var carry, borrow, t, t2 uint64
 	var bigger, uIsOne, vIsOne bool
@@ -205,7 +249,11 @@ func (z *{{.ElementName}}) Inverse(x *{{.ElementName}}) *{{.ElementName}} {
 {{ end }}
 
 // SetRandom sets z to a random element < q
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) SetRandom() {{.IfaceName}} {
+{{end}}
 	bytes := make([]byte, {{mul 8 .NbWords}})
 	io.ReadFull(rand.Reader, bytes)
 	{{- range $i :=  .NbWordsIndexesFull}}
@@ -223,36 +271,16 @@ func (z *{{.ElementName}}) SetRandom() *{{.ElementName}} {
 {{ else}}
 
 // One returns 1 (in montgommery form)
-func One() {{.ElementName}} {
-	var one {{.ElementName}}
+{{- if eq .IfaceName .ElementName}} 
+func (z {{.ElementName}}) One()  *{{.ElementName}} {
+{{else}}
+func (z {{.ElementName}}) One()  {{.IfaceName}} {
+{{end}}
+	one := z
 	one.SetOne()
-	return one
+	return &one
 }
 
-// FromInterface converts i1 from uint64, int, string, or {{.ElementName}}, big.Int into {{.ElementName}}
-// panic if provided type is not supported
-func FromInterface(i1 interface{}) {{.ElementName}} {
-	var val {{.ElementName}}
-
-	switch c1 := i1.(type) {
-	case uint64:
-		val.SetUint64(c1)
-	case int:
-		val.SetString(strconv.Itoa(c1))
-	case string:
-		val.SetString(c1)
-	case big.Int:
-		val.SetBigInt(&c1)
-	case {{.ElementName}}:
-		val = c1
-	case *{{.ElementName}}:
-		val.Set(c1)
-	default:
-		panic("invalid type")
-	}
-
-	return val
-}
 {{end}}
 
 

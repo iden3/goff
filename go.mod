@@ -1,4 +1,4 @@
-module github.com/consensys/goff
+module github.com/iden3/goff
 
 go 1.14
 

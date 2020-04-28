@@ -20,6 +20,7 @@ import (
 
 type field struct {
 	PackageName          string
+        IfaceName            string
 	ElementName          string
 	Modulus              string
 	NbWords              int
@@ -53,7 +54,7 @@ type field struct {
 
 // -------------------------------------------------------------------------------------------------
 // Field data precompute functions
-func newField(packageName, elementName, modulus string, benches bool, noCollidingNames bool) (*field, error) {
+func newField(packageName, elementName, modulus string, benches bool, ifaceName string, noCollidingNames bool) (*field, error) {
 	// parse modulus
 	var bModulus big.Int
 	if _, ok := bModulus.SetString(modulus, 10); !ok {
@@ -61,11 +62,15 @@ func newField(packageName, elementName, modulus string, benches bool, noCollidin
 	}
 
 	// field info
+        if ifaceName == "" {
+           ifaceName = elementName
+        }
 	F := &field{
 		PackageName:      packageName,
 		ElementName:      elementName,
 		Modulus:          modulus,
 		Benches:          benches,
+                IfaceName:        ifaceName,
 		NoCollidingNames: noCollidingNames,
 	}
 	F.Version = Version

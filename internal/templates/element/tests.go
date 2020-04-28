@@ -93,7 +93,11 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
         eDiv.Div(&e1, &e2)
         eNeg.Neg(&e1)
         eInv.Inverse(&e1)
+{{- if eq .IfaceName .ElementName}} 
 		eExp.Exp(e1, rExp)
+{{else}}
+		eExp.Exp(&e1, rExp)
+{{end}}
         eLsh.Double(&e1)
 
         // same operations with big int
@@ -146,7 +150,11 @@ func Test{{toUpper .ElementName}}CorrectnessAgainstBigInt(t *testing.T) {
 			for k := 0; k < len(bits); k++ {
 				exponent[k] = uint64(bits[k])
 			}
+                        {{- if eq .IfaceName .ElementName}} 
 			eExp2.Exp(e1, exponent...)
+                        {{else}}
+			eExp2.Exp(&e1, exponent...)
+                        {{end}}
 			bExp2.Exp(b1, b2, modulus)
 			cmpEandB(&eExp2, &bExp2, "Exp multi words")
 		}
@@ -189,7 +197,11 @@ func BenchmarkExp{{toUpper .ElementName}}(b *testing.B) {
 	benchRes{{.ElementName}}.SetRandom()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+                {{- if eq .IfaceName .ElementName}} 
 		benchRes{{.ElementName}}.Exp(x, mrand.Uint64())
+                {{else}}
+		benchRes{{.ElementName}}.Exp(&x, mrand.Uint64())
+                {{end}}
 	}
 }
 

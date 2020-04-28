@@ -19,6 +19,7 @@ func reduce{{.ElementName}}(res *{{.ElementName}})  // for test purposes
 
 // Mul z = x * y mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 	if z == x {
 		mulAssign{{.ElementName}}(z, y)
@@ -32,11 +33,34 @@ func (z *{{.ElementName}}) Mul(x, y *{{.ElementName}}) *{{.ElementName}} {
 		return z
 	}
 }
+{{else}}
+func (z *{{.ElementName}}) Mul(x, y {{.IfaceName}}) {{.IfaceName}} {
+	if z == x {
+		mulAssign{{.ElementName}}(z, y.(* {{.ElementName}}))
+		return z
+	} else if z == y {
+		mulAssign{{.ElementName}}(z, x.(* {{.ElementName}}))
+		return z
+	} else {
+		z.Set(x)
+		mulAssign{{.ElementName}}(z, y.(* {{.ElementName}}))
+		return z
+	}
+}
+{{end}}
+
 
 // MulAssign z = z * x mod q 
 // see https://hackmd.io/@zkteam/modular_multiplication
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) MulAssign(x *{{.ElementName}}) *{{.ElementName}} {
 	mulAssign{{.ElementName}}(z, x)
 	return z 
 }
+{{else}}
+func (z *{{.ElementName}}) MulAssign(x {{.IfaceName}}) {{.IfaceName}} {
+	mulAssign{{.ElementName}}(z, x.(* {{.ElementName}}))
+	return z 
+}
+{{end}}
 `

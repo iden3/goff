@@ -5,9 +5,15 @@ const Sqrt = `
 func (z *{{.ElementName}}) Legendre() int {
 	var l {{.ElementName}}
 	// z^((q-1)/2)
+       {{- if eq .IfaceName .ElementName}} 
 	l.Exp(*z, {{range $i := .LegendreExponent}}
 		{{$i}},{{end}}
 	)
+        {{else}}
+	l.Exp(z, {{range $i := .LegendreExponent}}
+		{{$i}},{{end}}
+	)
+        {{end}}
 	
 	if l.IsZero() {
 		return 0
@@ -23,14 +29,24 @@ func (z *{{.ElementName}}) Legendre() int {
 // Sqrt z = √x mod q
 // if the square root doesn't exist (x is not a square mod q)
 // Sqrt leaves z unchanged and returns nil
+{{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
+{{else}}
+func (z *{{.ElementName}}) Sqrt(x {{.IfaceName}}) {{.IfaceName}} {
+{{end}}
 	{{- if .SqrtQ3Mod4}}
 		// q ≡ 3 (mod 4)
 		// using  z ≡ ± x^((p+1)/4) (mod q)
 		var y, square {{.ElementName}}
+                {{- if eq .IfaceName .ElementName}} 
 		y.Exp(*x, {{range $i := .SqrtQ3Mod4Exponent}}
 			{{$i}},{{end}}
 		)
+                {{else}}
+		y.Exp(x, {{range $i := .SqrtQ3Mod4Exponent}}
+			{{$i}},{{end}}
+		)
+                {{end}}
 		// as we didn't compute the legendre symbol, ensure we found y such that y * y = x
 		square.Square(&y)
 		if square.Equal(x) {
@@ -43,9 +59,15 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 		var one, alpha, beta, tx, square {{.ElementName}}
 		one.SetOne()
 		tx.Double(x)
+                {{- if eq .IfaceName .ElementName}} 
 		alpha.Exp(tx, {{range $i := .SqrtAtkinExponent}}
 			{{$i}},{{end}}
 		)
+                {{else}}
+		alpha.Exp(tx, {{range $i := .SqrtAtkinExponent}}
+			{{$i}},{{end}}
+		)
+                {{end}}
 		beta.Square(&alpha).
 			MulAssign(&tx).
 			SubAssign(&one).
@@ -65,9 +87,15 @@ func (z *{{.ElementName}}) Sqrt(x *{{.ElementName}}) *{{.ElementName}} {
 
 		var y, b,t, w  {{.ElementName}}
 		// w = x^((s-1)/2))
+                {{- if eq .IfaceName .ElementName}} 
 		w.Exp(*x, {{range $i := .SqrtSMinusOneOver2}}
 			{{$i}},{{end}}
 		)
+                {{else}}
+		w.Exp(x, {{range $i := .SqrtSMinusOneOver2}}
+			{{$i}},{{end}}
+		)
+                {{end}}
 
 		// y = x^((s+1)/2)) = w * x
 		y.Mul(x, &w)
