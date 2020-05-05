@@ -54,7 +54,7 @@ type field struct {
 
 // -------------------------------------------------------------------------------------------------
 // Field data precompute functions
-func newField(packageName, elementName, modulus string, benches bool, ifaceName string, noCollidingNames bool) (*field, error) {
+func newField(packageName, elementName, modulus string, benches bool, ifaceName string, noCollidingNames, use_asm bool) (*field, error) {
 	// parse modulus
 	var bModulus big.Int
 	if _, ok := bModulus.SetString(modulus, 10); !ok {
@@ -197,7 +197,11 @@ func newField(packageName, elementName, modulus string, benches bool, ifaceName 
 	}
 
 	// ASM
-	F.ASM = F.NoCarry && F.NbWords <= 6 // max words without having to deal with spilling
+        if !use_asm {
+	  F.ASM = false
+        } else {
+	  F.ASM = F.NoCarry && F.NbWords <= 6 // max words without having to deal with spilling
+        }
 
 	return F, nil
 }

@@ -47,15 +47,17 @@ func (z *{{.ElementName}}) MulAssign(x {{.IfaceName}}) {{.IfaceName}} {
 {{- if eq .IfaceName .ElementName}} 
 func mulAssign{{.ElementName}}(z,x *{{.ElementName}}) {
 {{else}}
-func MulAssign{{.ElementName}}(z,x {{.IfaceName}}) {
+func mulAssign{{.ElementName}}(z,x {{.IfaceName}}) {
 {{end}}
         var xar = x.GetUint64()
+        var zar = z.GetUint64()
 	{{ if .NoCarry}}
-		{{ template "mul_nocarry" dict "all" . "V1" "z" "V2" "xar"}}
+		{{ template "mul_nocarry2" dict "all" . "V1" "zar" "V2" "xar"}}
 	{{ else }}
-		{{ template "mul_cios" dict "all" . "V1" "z" "V2" "xar" "NoReturn" true}}
+		{{ template "mul_cios" dict "all" . "V1" "zar" "V2" "xar" "NoReturn" true}}
 	{{ end }}
-	{{ template "reduce" . }}
+	{{ template "reduce2" .}}
+      
 }
 
 func fromMont{{.ElementName}}(z *{{.ElementName}}) {

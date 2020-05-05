@@ -40,6 +40,7 @@ var (
 	fPackageName string
 	fElementName string
 	fIfaceName   string
+        fasm          bool
 	fBenches     bool
 )
 
@@ -50,6 +51,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fOutputDir, "output", "o", "", "destination path to create output files")
 	rootCmd.PersistentFlags().StringVarP(&fPackageName, "package", "p", "", "package name in generated files")
 	rootCmd.PersistentFlags().StringVarP(&fIfaceName, "interface", "i", "", "interface name in generated files")
+	rootCmd.PersistentFlags().BoolVarP(&fasm, "asm", "a", true, "Use Assembly")
 	rootCmd.PersistentFlags().BoolVarP(&fBenches, "benches", "b", false, "set to true to generate montgomery multiplication (CIOS, FIPS, noCarry) benchmarks")
 
 	if bits.UintSize != 64 {
@@ -70,15 +72,15 @@ func cmdGenerate(cmd *cobra.Command, args []string) {
 	}
 
 	// generate code
-	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, fIfaceName, false); err != nil {
+	if err := GenerateFF(fPackageName, fElementName, fModulus, fOutputDir, fBenches, fIfaceName, false, fasm); err != nil {
 		fmt.Printf("\n%s\n", err.Error())
 		os.Exit(-1)
 	}
 }
 
-func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, ifaceName string, noCollidingNames bool) error {
+func GenerateFF(packageName, elementName, modulus, outputDir string, benches bool, ifaceName string, noCollidingNames, use_asm bool ) error {
 	// compute field constants
-	F, err := newField(packageName, elementName, modulus, benches, ifaceName, noCollidingNames)
+	F, err := newField(packageName, elementName, modulus, benches, ifaceName, noCollidingNames, use_asm)
 	if err != nil {
 		return err
 	}
@@ -89,12 +91,14 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 		element.Add,
 		element.Sub,
 		element.Reduce,
+		element.Reduce2,
 		element.Exp,
 		element.FromMont,
 		element.Conv,
 		element.MulCIOS,
 		element.MulFIPS,
 		element.MulNoCarry,
+		element.MulNoCarry2,
 		element.Sqrt,
 	}
 
@@ -198,7 +202,9 @@ func GenerateFF(packageName, elementName, modulus, outputDir string, benches boo
 			element.MontgomeryMultiplication,
 			element.MulCIOS,
 			element.MulNoCarry,
+			element.MulNoCarry2,
 			element.Reduce,
+			element.Reduce2,
 		}
 		pathSrc := filepath.Join(outputDir, eName+"_mul.go")
 		bavardOptsCpy := make([]func(*bavard.Bavard) error, len(bavardOpts))

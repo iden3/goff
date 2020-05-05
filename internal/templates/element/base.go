@@ -63,6 +63,19 @@ func (z *{{.ElementName}}) Set(x {{.IfaceName}}) {{.IfaceName}} {
 	return z
 }
 
+// Set z = x
+{{- if eq .IfaceName .ElementName}} 
+func (z *{{.ElementName}}) SetFromArray(xar []uint64) *{{.IfaceName}} {
+{{else}}
+func (z *{{.ElementName}}) SetFromArray(xar []uint64) {{.IfaceName}} {
+{{end}}
+
+	{{- range $i := .NbWordsIndexesFull}}
+		z[{{$i}}] = xar[{{$i}}]
+	{{- end}}
+	return z
+}
+
 // SetZero z = 0
 {{- if eq .IfaceName .ElementName}} 
 func (z *{{.ElementName}}) SetZero() *{{.ElementName}} {
