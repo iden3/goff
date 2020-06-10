@@ -73,7 +73,7 @@ func (z *{{.ElementName}}) SetFromArray(xar []uint64) {{.IfaceName}} {
 	{{- range $i := .NbWordsIndexesFull}}
 		z[{{$i}}] = xar[{{$i}}]
 	{{- end}}
-	return z
+	return z.ToMont()
 }
 
 // SetZero z = 0
